@@ -47,8 +47,26 @@ except Exception as e:
     logger.error(f"Error en la configuración: {e}")
     raise
 
+# Configure API clients with environment variables
+def initialize_clients():
+    """Initialize API clients with environment variables."""
+    try:
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        openai_key = os.getenv("OPENAI_API_KEY")
+        
+        if not anthropic_key or not openai_key:
+            raise ValueError("Missing required API keys in environment variables")
+            
+        return {
+            "anthropic": anthropic.Anthropic(api_key=anthropic_key),
+            "openai": openai.OpenAI(api_key=openai_key)
+        }
+    except Exception as e:
+        logger.error(f"Failed to initialize API clients: {e}")
+        raise
+
 # Configuración de los clientes
-openai.api_key = config["OPENAI_API_KEY"]
+clients = initialize_clients()
 
 # Configuración de modelos
 ANTHROPIC_MODEL = config["ANTHROPIC_MODEL"]
@@ -159,7 +177,7 @@ CUSTOM_TOOLS = [
 class ClaudeInterface:
     def __init__(self):
         try:
-            self.client = anthropic.Anthropic(api_key=config["ANTHROPIC_API_KEY"])
+            self.client = clients["anthropic"]
             self.tools = CUSTOM_TOOLS
             self.message_history = []
             logger.info("ClaudeInterface inicializado correctamente")
@@ -322,7 +340,7 @@ class CodeSecurityTools:
 
 class OpenAIInterface:
     def __init__(self):
-        self.client = openai.OpenAI()
+        self.client = clients["openai"]
         self.model = OPENAI_MODEL
         self.message_history = []
         logger.info("OpenAIInterface inicializado correctamente")

@@ -4,6 +4,8 @@ Este sistema implementa una interfaz avanzada con Claude de Anthropic, incorpora
 
 ## Configuración del Entorno
 
+### Configuración Inicial
+
 1. Crear y activar el entorno virtual:
 ```powershell
 python -m venv venv
@@ -15,7 +17,24 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-3. Configurar el archivo .env:
+### Configuración de Variables de Entorno
+
+1. Copiar el archivo de plantilla de variables de entorno:
+```powershell
+Copy-Item .env.template .env
+```
+
+2. Editar el archivo `.env` con tus propias claves API y configuraciones:
+   - Reemplazar `your_anthropic_api_key_here` con tu clave API de Anthropic
+   - Reemplazar `your_openai_api_key_here` con tu clave API de OpenAI
+   - Ajustar otras configuraciones según sea necesario
+
+⚠️ IMPORTANTE: Seguridad
+- Nunca compartir o exponer las claves API
+- No incluir el archivo `.env` en el control de versiones
+- No hardcodear valores sensibles en el código
+- Usar variables de entorno para toda la información sensible
+
 ```env
 ANTHROPIC_API_KEY=tu_api_key_aquí
 ANTHROPIC_MODEL=claude-3-opus-20240229

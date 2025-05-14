@@ -9,14 +9,22 @@ __pycache__/
 *$py.class
 *.so
 
-# Archivos de configuración
+# Archivos de configuración y secretos
 .env
+*.env
+!.env.template
 *.log
+config.json
+secrets.json
+credentials.*
+api_keys.*
 
-# Archivos de resultados
+# Archivos de resultados y logs
 test_results.json
 ai_system.log
 test_run.log
+*.log
+diagnostic_*.json
 
 # Archivos del sistema
 .DS_Store
