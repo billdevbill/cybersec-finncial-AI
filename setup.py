@@ -1,92 +1,47 @@
-# Initial setup and configuration script
-import os
-import sys
-import subprocess
-import logging
-from pathlib import Path
+from setuptools import setup, find_packages
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('setup.log', encoding='utf-8')
-    ]
+setup(
+    name="ai_system",
+    version="0.1.0",
+    description="Advanced AI System for Security and Financial Analysis",
+    author="Felipe",
+    packages=find_packages(exclude=["tests*", "backup_tests*"]),
+    python_requires=">=3.9",
+    install_requires=[
+        "anthropic>=0.8.0",
+        "openai>=1.12.0",
+        "python-dotenv>=1.0.0",
+        "streamlit>=1.31.0",
+        "numpy>=1.24.0",
+        "torch>=2.2.0",
+        "scapy>=2.5.0",
+        "python-nmap>=0.7.1",
+        "plotly>=5.18.0",
+        "pandas>=2.2.0",
+        "sqlalchemy>=2.0.0",
+        "pydantic>=2.6.0",
+        "cryptography>=42.0.0"
+    ],
+    extras_require={
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-asyncio>=0.23.0",
+            "pytest-cov>=4.1.0",
+            "black>=24.1.0",
+            "isort>=5.13.0",
+            "mypy>=1.8.0",
+            "pylint>=3.0.0"
+        ],
+        "test": [
+            "pytest>=7.0.0",
+            "pytest-asyncio>=0.23.0",
+            "pytest-cov>=4.1.0"
+        ]
+    },
+    entry_points={
+        "console_scripts": [
+            "ai-system=AI1:main",
+            "ai-webapp=app:main"
+        ]
+    }
 )
-logger = logging.getLogger(__name__)
-
-def setup_environment():
-    """Set up the Python environment"""
-    try:
-        # Create virtual environment if it doesn't exist
-        if not Path('venv').exists():
-            logger.info("Creating virtual environment...")
-            subprocess.run([sys.executable, '-m', 'venv', 'venv'], check=True)
-        
-        # Get the virtual environment Python path
-        if sys.platform == "win32":
-            venv_python = Path('venv/Scripts/python.exe')
-        else:
-            venv_python = Path('venv/bin/python')
-        
-        # Upgrade pip
-        logger.info("Upgrading pip...")
-        subprocess.run([str(venv_python), '-m', 'pip', 'install', '--upgrade', 'pip'], check=True)
-        
-        # Install requirements
-        logger.info("Installing requirements...")
-        subprocess.run([str(venv_python), '-m', 'pip', 'install', '-r', 'requirements.txt'], check=True)
-        
-        logger.info("Environment setup completed successfully")
-        return True
-    except Exception as e:
-        logger.error(f"Error setting up environment: {e}")
-        return False
-
-def verify_installation():
-    """Verify the installation"""
-    try:
-        # Import test
-        import anthropic
-        import openai
-        from dotenv import load_dotenv
-        
-        # Load environment variables
-        load_dotenv()
-        
-        # Check API keys
-        api_keys = {
-            "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
-            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY")
-        }
-        
-        missing_keys = [k for k, v in api_keys.items() if not v]
-        if missing_keys:
-            logger.error(f"Missing API keys: {missing_keys}")
-            return False
-        
-        logger.info("Installation verified successfully")
-        return True
-    except ImportError as e:
-        logger.error(f"Import error: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Verification error: {e}")
-        return False
-
-if __name__ == "__main__":
-    try:
-        logger.info("Starting setup process...")
-        if setup_environment() and verify_installation():
-            logger.info("Setup completed successfully!")
-            sys.exit(0)
-        else:
-            logger.error("Setup failed!")
-            sys.exit(1)
-    except KeyboardInterrupt:
-        logger.info("Setup interrupted by user")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        sys.exit(1)

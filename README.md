@@ -1,6 +1,6 @@
-# Sistema Avanzado de Análisis y Seguridad
+# CyberSec Financial AI - Sistema Avanzado de Análisis
 
-Este sistema implementa una interfaz avanzada con Claude de Anthropic, incorporando herramientas especializadas para análisis de seguridad, generación de entropía cuántica, detección de anomalías financieras y ofuscación de código.
+Sistema avanzado que integra Claude de Anthropic y GPT-4 para análisis de seguridad, detección de anomalías financieras, generación de entropía cuántica y protección de código. Diseñado para proporcionar análisis profundo y protección robusta en entornos financieros y de seguridad.
 
 ## Configuración del Entorno
 
