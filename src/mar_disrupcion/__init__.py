@@ -1,10 +1,6 @@
 import os
 import json
-import anthropic
-import openai
-from dotenv import load_dotenv
 from typing import Dict, List, Any, Optional, Union
-import logging
 import random
 from datetime import datetime
 import sys
@@ -12,13 +8,24 @@ import asyncio
 import sqlite3
 import numpy as np
 from pathlib import Path
+import structlog
+import anthropic
+import openai
+
 from tools.network_analyzer import AdvancedNetworkAnalyzer, ParallelProcessor
 from integrations.api_client import SecurityFeedIntegration, FinancialDataIntegration
 from core.memory_system import AdvancedMemorySystem
+from core.config import config, logger
 
-# Configuración de logging con formato mejorado
+# Importar configuración centralizada y logging
+from core.config import config, logger, setup_logging
+
+# Asegurar que el logging está configurado correctamente
+setup_logging(config)
+
+# Configurar logging adicional específico para este módulo
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, config["monitoring"]["log_level"]),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -132,17 +139,12 @@ class DecisionEngine:
 
 class AISystem:
     def __init__(self):
-        self.config = self._load_config()
+        """Inicializa el sistema MAR-DISRUPCION."""
+        self.config = config  # Usar configuración centralizada
         self.clients = self._initialize_clients()
         self.memory_system = AdvancedMemorySystem(
-            retention_period=int(self.config.get("MEMORY_RETENTION_PERIOD", 14400)),
-            context_depth=int(self.config.get("CONTEXT_DEPTH", 8)),
-            confidence_threshold=float(self.config.get("MEMORY_CONFIDENCE_THRESHOLD", 0.75)),
-            cache_size=int(self.config.get("CACHE_SIZE", 2048)),
-            learning_rate=float(self.config.get("LEARNING_RATE", 0.0005)),
-            lstm_hidden_size=int(self.config.get("LSTM_HIDDEN_SIZE", 1024)),
-            lstm_num_layers=int(self.config.get("LSTM_NUM_LAYERS", 3)),
-            dropout_rate=float(self.config.get("DROPOUT_RATE", 0.2))
+            config=self.config,
+            db_path=str(Path("memory/system_memory.db"))
         )
         self.decision_engine = DecisionEngine(
             confidence_threshold=float(self.config.get("DECISION_CONFIDENCE_THRESHOLD", 0.85))
@@ -159,8 +161,7 @@ class AISystem:
         self.financial_data = FinancialDataIntegration()
         self._setup_integrations()
         logger.info("Sistema AI inicializado con memoria avanzada y motor de decisiones")
-
-    def _validate_config_value(self, value: Any, key: str, 
+      def _validate_config_value(self, value: Any, key: str, 
                               min_value: Optional[float] = None, 
                               max_value: Optional[float] = None,
                               required: bool = True) -> bool:
@@ -173,22 +174,44 @@ class AISystem:
                 raise ValueError(f"{key} debe ser mayor o igual a {min_value}")
             if max_value is not None and value > max_value:
                 raise ValueError(f"{key} debe ser menor o igual a {max_value}")
-        return True
-
-    def _load_config(self) -> dict:
+        return True    def _load_config(self) -> dict:
         """Carga y valida la configuración del sistema."""
-        load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
-        
-        # Definir configuración con valores por defecto y validaciones
-        config = {
-            "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
-            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
-            "ANTHROPIC_MODEL": os.getenv("ANTHROPIC_MODEL", "claude-3-opus-20240229"),
-            "OPENAI_MODEL": os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview"),
-            "MAX_TOKENS": int(os.getenv("MAX_TOKENS", "64826")),
-            "TEMPERATURE": float(os.getenv("TEMPERATURE", "1")),
-            "NETWORK_SCAN_TIMEOUT": int(os.getenv("NETWORK_SCAN_TIMEOUT", "30")),
-            "ENTROPY_BUFFER_SIZE": int(os.getenv("ENTROPY_BUFFER_SIZE", "4096")),
+        try:
+            # Cargar variables de entorno desde .env
+            dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+            if os.path.exists(dotenv_path):
+                load_dotenv(dotenv_path=dotenv_path)
+                logger.info("Variables de entorno cargadas desde .env")
+            else:
+                logger.warning("Archivo .env no encontrado, usando variables de entorno del sistema")
+            
+            # Definir configuración y valores por defecto
+            config = {
+                # Claves de API (requeridas)
+                "ANTHROPIC_API_KEY": self._validate_config_value(os.getenv("ANTHROPIC_API_KEY"), "ANTHROPIC_API_KEY"),
+                "OPENAI_API_KEY": self._validate_config_value(os.getenv("OPENAI_API_KEY"), "OPENAI_API_KEY"),
+                
+                # Configuración de modelos
+                "ANTHROPIC_MODEL": os.getenv("ANTHROPIC_MODEL", "claude-3-opus-20240229"),
+                "OPENAI_MODEL": os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview"),
+                
+                # Parámetros de generación
+                "MAX_TOKENS": self._validate_config_value(os.getenv("MAX_TOKENS", "64826"), 
+                                                        "MAX_TOKENS", 
+                                                        min_value=1, 
+                                                        max_value=100000),
+                "TEMPERATURE": self._validate_config_value(os.getenv("TEMPERATURE", "1"), 
+                                                         "TEMPERATURE", 
+                                                         min_value=0, 
+                                                         max_value=2),
+                
+                # Timeouts y límites
+                "NETWORK_SCAN_TIMEOUT": self._validate_config_value(os.getenv("NETWORK_SCAN_TIMEOUT", "30"), 
+                                                                  "NETWORK_SCAN_TIMEOUT", 
+                                                                  min_value=1),
+                "ENTROPY_BUFFER_SIZE": self._validate_config_value(os.getenv("ENTROPY_BUFFER_SIZE", "4096"), 
+                                                                 "ENTROPY_BUFFER_SIZE", 
+                                                                 min_value=1024),
             "FINANCIAL_ANALYSIS_THRESHOLD": float(os.getenv("FINANCIAL_ANALYSIS_THRESHOLD", "0.85")),
             "CODE_OBFUSCATION_SEED": int(os.getenv("CODE_OBFUSCATION_SEED", "42")),
             "MEMORY_RETENTION_PERIOD": int(os.getenv("MEMORY_RETENTION_PERIOD", "7200")),
@@ -212,18 +235,40 @@ class AISystem:
         if missing:
             raise ValueError(f"Faltan variables de entorno requeridas: {', '.join(missing)}")
         
-        return config
-    
-    def _initialize_clients(self) -> dict:
-        """Inicializa los clientes de API."""
+        return config    def _initialize_clients(self) -> dict:
+        """Inicializa los clientes de API usando las claves de la configuración."""
         try:
-            return {
-                "anthropic": anthropic.Anthropic(api_key=self.config["ANTHROPIC_API_KEY"]),
-                "openai": openai.OpenAI(api_key=self.config["OPENAI_API_KEY"])
-            }
+            if not self.config.get("ANTHROPIC_API_KEY") or not self.config.get("OPENAI_API_KEY"):
+                raise ValueError("Las claves de API ANTHROPIC_API_KEY y OPENAI_API_KEY son requeridas")
+                
+            clients = {}
+            
+            # Inicializar cliente Anthropic
+            try:
+                clients["anthropic"] = anthropic.Anthropic(
+                    api_key=self.config["ANTHROPIC_API_KEY"]
+                )
+                logger.info("Cliente Anthropic inicializado correctamente")
+            except Exception as e:
+                logger.error("Error inicializando cliente Anthropic", error=str(e))
+                raise ValueError(f"Error inicializando Anthropic: {str(e)}")
+            
+            # Inicializar cliente OpenAI
+            try:
+                clients["openai"] = openai.OpenAI(
+                    api_key=self.config["OPENAI_API_KEY"]
+                )
+                logger.info("Cliente OpenAI inicializado correctamente")
+            except Exception as e:
+                logger.error("Error inicializando cliente OpenAI", error=str(e))
+                raise ValueError(f"Error inicializando OpenAI: {str(e)}")
+                
+            return clients
+            
         except Exception as e:
-            logger.error(f"Error al inicializar clientes API: {e}")
-            raise
+            logger.error("Error crítico inicializando clientes API", 
+                        error=str(e), exc_info=True)
+            raise RuntimeError("Error crítico inicializando clientes API") from e
 
     def _setup_integrations(self):
         """Configura las integraciones con APIs externas."""

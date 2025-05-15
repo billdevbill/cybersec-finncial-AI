@@ -12,15 +12,44 @@ logger = logging.getLogger(__name__)
 class AdvancedMemorySystem:
     def __init__(
         self,
-        retention_period: int = 14400,  # 4 horas
-        context_depth: int = 8,
-        confidence_threshold: float = 0.75,
-        cache_size: int = 2048,
-        learning_rate: float = 0.0005,
-        lstm_hidden_size: int = 1024,
-        lstm_num_layers: int = 3,
-        dropout_rate: float = 0.2
+        config: Dict,
+        db_path: Optional[str] = None
     ):
+        """
+        Inicializa el sistema de memoria avanzado.
+        
+        Args:
+            config: Diccionario con la configuración del sistema
+            db_path: Ruta opcional a la base de datos. Si no se proporciona,
+                    se usa la ruta por defecto en la carpeta memory.
+        """
+        # Cargar configuración
+        memory_config = config["memory"]
+        neural_config = config["neural"]
+        
+        # Configuración de memoria
+        self.retention_period = memory_config["retention_period"]
+        self.context_depth = memory_config["context_depth"]
+        self.confidence_threshold = memory_config["confidence_threshold"]
+        self.cache_size = memory_config["cache_size"]
+        
+        # Configuración de la red neuronal
+        self.learning_rate = neural_config["learning_rate"]
+        self.lstm_hidden_size = neural_config["lstm_hidden_size"]
+        self.lstm_num_layers = neural_config["lstm_num_layers"]
+        self.dropout_rate = neural_config["dropout_rate"]
+        
+        # Configurar caché
+        self._cache = TTLCache(
+            maxsize=self.cache_size,
+            ttl=self.retention_period
+        )
+        
+        # Configuración de la red neuronal
+        self.learning_rate = neural_config["learning_rate"]
+        self.lstm_hidden_size = neural_config["lstm_hidden_size"]
+        self.lstm_num_layers = neural_config["lstm_num_layers"]
+        self.dropout_rate = neural_config["dropout_rate"]
         self.retention_period = retention_period
         self.context_depth = context_depth
         self.confidence_threshold = confidence_threshold

@@ -1,42 +1,58 @@
-# AI y Machine Learning
+# Core Dependencies
 anthropic==0.8.0
 openai==1.12.0
-langchain==0.1.0
-transformers==4.36.0
-torch==2.1.0
-tensorflow==2.15.0
+python-dotenv==1.0.0
+toml==0.10.2
 
-# Análisis de Datos y Finanzas
+# AI and ML
+torch==2.2.0
+tensorflow==2.15.0
+transformers==4.36.0
+langchain==0.1.0
+
+# Data Analysis
 pandas==2.2.1
 numpy==1.26.4
 scipy==1.11.0
-yfinance==0.2.35
-python-dotenv==1.0.0
 
-# Seguridad y Criptografía
+# Security
 cryptography==42.0.4
 pyOpenSSL==23.0.0
 scapy==2.5.0
-pycryptodome==3.19.0
 python-nmap==0.7.1
+pycryptodome==3.20.0
 
-# Web y APIs
+# API and Web
+aiohttp==3.9.3
 fastapi==0.104.0
 uvicorn==0.24.0
 requests==2.31.0
-aiohttp==3.9.0
 
-# Interfaz de Usuario
+# Caching and Resilience
+cachetools==5.3.0
+tenacity==8.2.0
+
+# Monitoring and Logging
+structlog==24.1.0
+prometheus-client==0.19.0
+
+# UI and Visualization
 streamlit==1.32.0
 plotly==5.19.0
 dash==2.14.0
-gradio==4.0.0
 
-# Testing y Desarrollo
-pytest==7.4.0
-black==23.11.0
-mypy==1.7.0
+# Database
+sqlalchemy==2.0.0
+alembic==1.13.0
+
+# Development and Testing
+pytest==8.0.0
 pytest-asyncio==0.23.5
+black==24.1.1
+mypy==1.8.0
+pylint==3.0.3
+isort==5.13.0
+coverage==7.4.0
 pytest==8.0.0
 pytest-asyncio==0.23.5
 aiohttp==3.9.3

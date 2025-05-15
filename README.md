@@ -1,4 +1,62 @@
-# CyberSec Financial AI - Sistema Avanzado de Análisis
+# MAR-DISRUPCION
+
+Sistema Avanzado de Análisis de Seguridad y Finanzas con Inteligencia Artificial
+
+## Descripción
+
+MAR-DISRUPCION es un sistema integrado que combina análisis de seguridad y finanzas utilizando técnicas avanzadas de IA. El sistema proporciona capacidades de:
+
+- Análisis de seguridad en tiempo real
+- Procesamiento de datos financieros
+- Sistema de memoria avanzado
+- Motor de decisiones basado en IA
+- Integración con múltiples APIs externas
+
+## Instalación
+
+### Requisitos Previos
+
+- Python 3.9 o superior
+- pip (gestor de paquetes de Python)
+- Acceso a las APIs necesarias (Anthropic, OpenAI, etc.)
+
+### Instalación para Desarrollo
+
+```bash
+git clone https://github.com/yourusername/mar-disrupcion.git
+cd mar-disrupcion
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+```
+
+### Instalación para Producción
+
+```bash
+pip install -e ".[prod]"
+```
+
+## Estructura del Proyecto
+
+```
+mar-disrupcion/
+├── src/
+│   └── mar_disrupcion/
+│       ├── core/         # Funcionalidad central
+│       ├── tools/        # Herramientas especializadas
+│       ├── integrations/ # Integraciones con APIs
+│       └── interfaces/   # Interfaces de modelo
+├── tests/               # Tests unitarios y de integración
+├── docs/               # Documentación
+└── requirements/       # Requisitos por ambiente
+```
+
+## Documentación
+
+La documentación completa está disponible en la carpeta `docs/`:
+- Guía de Usuario: `docs/user/`
+- Documentación Técnica: `docs/technical/`
+- Referencia de API: `docs/api/` - Sistema Avanzado de Análisis de Seguridad y Finanzas
 
 Sistema avanzado que integra Claude de Anthropic y GPT-4 para análisis de seguridad, detección de anomalías financieras, generación de entropía cuántica y protección de código. Diseñado para proporcionar análisis profundo y protección robusta en entornos financieros y de seguridad.
 

@@ -1,0 +1,42 @@
+# Project Configuration File
+[project]
+name = "MAR-DISRUPCION"
+version = "0.1.0"
+user_agent = "MAR-DISRUPCION/0.1.0"
+
+[api]
+max_retries = 3
+retry_multiplier = 1
+min_retry_delay = 4
+max_retry_delay = 10
+connection_timeout = 30
+read_timeout = 20
+pool_connections = 100
+keepalive_timeout = 60
+
+[memory]
+retention_period = 14400  # 4 hours
+context_depth = 8
+confidence_threshold = 0.75
+cache_size = 2048
+
+[neural]
+learning_rate = 0.0005
+lstm_hidden_size = 1024
+lstm_num_layers = 3
+dropout_rate = 0.2
+batch_size = 64
+
+[security]
+deep_scan_timeout = 120
+packet_capture_buffer = 8192
+network_analysis_depth = 3
+
+[financial]
+analysis_threshold = 0.85
+market_data_cache_ttl = 300  # 5 minutes
+
+[monitoring]
+log_level = "INFO"
+metrics_enabled = true
+tracing_enabled = true

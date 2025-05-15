@@ -1,0 +1,30 @@
+# Documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+recursive-include docs *.rst *.md *.txt
+
+# Configuration
+include config.toml
+include pyproject.toml
+include requirements/*.txt
+
+# Package data
+recursive-include src/mar_disrupcion *.py
+recursive-include src/mar_disrupcion/core *.py
+recursive-include src/mar_disrupcion/tools *.py
+recursive-include src/mar_disrupcion/integrations *.py
+recursive-include src/mar_disrupcion/interfaces *.py
+
+# Test files
+recursive-include tests *.py
+
+# Exclude
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude .git*
+global-exclude .pytest_cache
+global-exclude .coverage

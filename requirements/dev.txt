@@ -1,0 +1,32 @@
+# Include base requirements
+-r base.txt
+
+# Development Tools
+black>=24.1.1
+isort>=5.13.0
+mypy>=1.8.0
+pylint>=3.0.3
+flake8>=7.0.0
+autopep8>=2.0.4
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.5
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+pytest-xdist>=3.5.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=2.0.0
+autodoc>=0.5.0
+
+# Debugging
+ipython>=8.21.0
+ipdb>=0.13.13
+memory-profiler>=0.61.0
+
+# Type Checking
+types-requests>=2.31.0
+types-python-dateutil>=2.8.19
+types-PyYAML>=6.0.12

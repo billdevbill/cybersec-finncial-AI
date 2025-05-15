@@ -12,10 +12,13 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+# Importar configuración centralizada
+from core.config import config, logger
+
 # Configuración de la página
 st.set_page_config(
-    page_title="CyberSec Financial AI",
-    page_icon="🔒",
+    page_title=f"{config['project']['name']} - Dashboard",
+    page_icon="🌊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
