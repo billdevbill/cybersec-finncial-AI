@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import sqlite3
 from pathlib import Path
 import logging
+import time
+from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
 
@@ -39,29 +41,30 @@ class AdvancedMemorySystem:
         self.lstm_num_layers = neural_config["lstm_num_layers"]
         self.dropout_rate = neural_config["dropout_rate"]
         
-        # Configurar caché
-        self._cache = TTLCache(
+        # Sistema de caché mejorado con TTL y prioridad
+        self.priority_cache = TTLCache(
             maxsize=self.cache_size,
-            ttl=self.retention_period
+            ttl=self.retention_period,
+            timer=time.time
         )
+        self.cache_priorities = {}
+        self.cache_hits = 0
+        self.cache_misses = 0
         
-        # Configuración de la red neuronal
-        self.learning_rate = neural_config["learning_rate"]
-        self.lstm_hidden_size = neural_config["lstm_hidden_size"]
-        self.lstm_num_layers = neural_config["lstm_num_layers"]
-        self.dropout_rate = neural_config["dropout_rate"]
-        self.retention_period = retention_period
-        self.context_depth = context_depth
-        self.confidence_threshold = confidence_threshold
-        self.cache_size = cache_size
-        self.learning_rate = learning_rate
+        # Inicializar métricas de caché
+        self.cache_metrics = {
+            "hits": 0,
+            "misses": 0,
+            "evictions": 0,
+            "size": 0
+        }
         
         # Configuración LSTM
         self.neural_memory = torch.nn.LSTM(
             input_size=512,
-            hidden_size=lstm_hidden_size,
-            num_layers=lstm_num_layers,
-            dropout=dropout_rate,
+            hidden_size=self.lstm_hidden_size,
+            num_layers=self.lstm_num_layers,
+            dropout=self.dropout_rate,
             batch_first=True
         )
         
@@ -70,10 +73,6 @@ class AdvancedMemorySystem:
             self.neural_memory.parameters(),
             lr=self.learning_rate
         )
-        
-        # Sistema de caché
-        self.priority_cache = {}
-        self.cache_priorities = {}
         
         # Inicializar base de datos
         self.db_path = Path("memory/system_memory.db")
@@ -253,23 +252,70 @@ class AdvancedMemorySystem:
             raise
     
     def _update_cache(self, memory_id: str, content: Any, importance: float):
-        """Actualiza el caché con sistema de prioridad."""
+        """Actualiza el caché con sistema de prioridad y métricas"""
         try:
             if len(self.priority_cache) >= self.cache_size:
-                # Eliminar elemento menos importante
+                # Política de reemplazo basada en importancia y antigüedad
                 min_priority_key = min(
                     self.cache_priorities.items(),
-                    key=lambda x: x[1]
+                    key=lambda x: (x[1], self.priority_cache.get(x[0], {}).get("last_accessed", 0))
                 )[0]
+                
+                # Registrar evicción
+                self.cache_metrics["evictions"] += 1
+                
                 del self.priority_cache[min_priority_key]
                 del self.cache_priorities[min_priority_key]
             
-            self.priority_cache[memory_id] = content
+            current_time = time.time()
+            self.priority_cache[memory_id] = {
+                "content": content,
+                "last_accessed": current_time
+            }
             self.cache_priorities[memory_id] = importance
+            self.cache_metrics["size"] = len(self.priority_cache)
             
         except Exception as e:
             logger.error(f"Error actualizando caché: {e}")
             raise
+    
+    async def get_from_cache(self, memory_id: str) -> Optional[Any]:
+        """Intenta recuperar una memoria desde el caché"""
+        try:
+            if memory_id in self.priority_cache:
+                self.cache_metrics["hits"] += 1
+                cache_entry = self.priority_cache[memory_id]
+                cache_entry["last_accessed"] = time.time()
+                return cache_entry["content"]
+            
+            self.cache_metrics["misses"] += 1
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error accediendo al caché: {e}")
+            return None
+    
+    async def get_cache_metrics(self) -> Dict:
+        """Retorna métricas actuales del sistema de caché"""
+        return {
+            **self.cache_metrics,
+            "hit_ratio": self.cache_metrics["hits"] / 
+                        (self.cache_metrics["hits"] + self.cache_metrics["misses"])
+            if (self.cache_metrics["hits"] + self.cache_metrics["misses"]) > 0 
+            else 0
+        }
+    
+    async def clear_cache(self):
+        """Limpia el caché y reinicia métricas"""
+        self.priority_cache.clear()
+        self.cache_priorities.clear()
+        self.cache_metrics = {
+            "hits": 0,
+            "misses": 0,
+            "evictions": 0,
+            "size": 0
+        }
+        logger.info("Caché limpiado y métricas reiniciadas")
     
     def _generate_embedding(self, content: Any) -> np.ndarray:
         """Genera embedding para el contenido usando el modelo neuronal."""
